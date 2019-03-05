@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>iview example</title>
+    <script src="./js/vue.js"></script>
+    <link rel="stylesheet" type="text/css" href="http://unpkg.com/iview/dist/styles/iview.css">
+    <script type="text/javascript" src="http://unpkg.com/iview/dist/iview.min.js"></script>
+    <script src="./js/jquery-3.2.1.min.js"></script>
+</head>
+<body style="padding:20px;">
+<div id="app">
+<card>
+  <div class="title">公众号自定义文章管理系统</div>
+  <i-button type="primary" @click="addNewEdit" style="margin-bottom: 20px;width: 100px;">新建文章</i-button>
+  <i-table :columns="columns" stripe :data="dataSource"></i-table>
+  <!-- <Page :total="totalNum" show-sizer @on-change='changePage'
+  @on-page-size-change="changePageNum" v-if="isPage"></Page> -->
+  </card>
+</div>
+</body>
+<script>
+    
+    var vm =  new Vue({
+        el: '#app',
+        data: {
+            theme: 'primary',
+            visible: false,
+            isPage:true,
+            dataSource: [],//数据源
+            totalNum:10,
+            columns: [
+                {
+                    title: '编号',
+                    align: 'center',
+                    width: 120,
+                    key: 'id'
+                },
+                {
+                title: '标题',
+                        align: 'center',
+                        width: 250,
+                        key: 'title'
+                    },
+                    {
+                        title: '预览',
+                        align: 'center',
+                        width: 150,
+                        render: (h, params) => {
+                            return h('img', {
+                                attrs: {
+                                    src: params.row.img_url
+                                },
+                                 style: {width: '120px',height:'80px'}
+                            });
+                        }
+                    },
+                    {
+                        title: '是否转载',
+                        align: 'center',
+                        width: 150,
+                        key: 'reprint_type',
+                    },
+                    {
+                        title: '文章类别',
+                        align: 'center',
+                        width: 150,
+                        key: 'category',
+                    },
+                    {
+                        title: '创建时间',
+                        align: 'center',
+                        width: 200,
+                        key: 'add_time',
+                    },
+                       
+                    {
+                         title: ' '
+                    },
+                    {
+                        title: '操作',
+                        key: 'action',
+                        width: 200,
+                        fixed: 'right',
+                        align: 'center',
+                        render: (h, params) => {
+                            return h('div', [
+                                h('Button', {
+                                    props: {
+                                        type: 'primary',
+                                        size: 'small'
+                                    },
+                                    style: {
+                                        marginRight: '18px'
+                                    },
+                                    on: {
+                                        click: () => {
+                                            window.location.href = "./editor.html?id="+params.row.id;
+                                        }
+                                    }
+                                }, '详情'),
+                                h('Button', {
+                                    props: {
+                                        type: 'error',
+                                        size: 'small'
+                                    },
+                                    on: {
+                                        click: () => {
+                                           
+                                           vm.deleteDataByID(params.row.id);
+                                        }
+                                    }
+                                }, '删除'),
+                                ])
+                            }
+                        }
+                      
+            ],
+            
+        },
+        methods: {
+            show: function () {
+                this.visible = true;
+            },
+            changePage(currpage){
+                console.log(currpage);
+            },
+            changePageNum(num){
+                console.log(num);
+            },
+            addNewEdit(){
+                window.location.href = "./editor.html";
+            },
+            //删除
+            deleteDataByID:function(id){
+                let _this = this;
+                $.ajax({
+                    type:"get",
+                    url:"http://188.131.225.138:8082/news/delById?id="+id,
+                    data:{},
+                    dataType:"json",
+                    success:function(data){
+                        _this.$Message.success('删除成功');
+                        _this.loadTableData();
+                    },
+                    error:function(msg){
+                        _this.$Message.error(msg);
+                    }
+                })
+            },
+            //数据初始化
+            loadTableData(){
+                let _this = this;
+                $.ajax({
+                    type:"get",
+                    url:"http://188.131.225.138:8082/news/getNewsPage",
+                    data:{},
+                    dataType:"json",
+                    success:function(data){
+                        console.log(data.Data)
+                        _this.totalNum = data.Data.total;
+                        _this.dataSource = data.Data.list;
+   
+                    },
+                    error:function(msg){
+                        
+                    }
+                })
+            }
+            
+        },
+        created: function () {
+            this.loadTableData();
+        },
+        
+    })
+  </script>
+  <style type="text/css">
+        .ivu-page{
+            margin-top: 20px;
+            float:right;
+        }
+        .title{
+            font-size: 30px;
+            margin-bottom: 15px;
+            background: #515a6e;
+            color: white;
+            height: 100px;
+            line-height: 100px;
+            padding-left: 15px;
+        }
+    </style>
+</html>

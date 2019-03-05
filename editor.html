@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>iView Editor</title>
+        <script src="./js/vue.js"></script>
+        <link rel="stylesheet" type="text/css" href="http://unpkg.com/iview/dist/styles/iview.css">
+        <script type="text/javascript" src="http://unpkg.com/iview/dist/iview.min.js"></script>
+        <script type="text/javascript" src="http://unpkg.com/wangeditor/release/wangEditor.js"></script>
+        <script src="./js/jquery-3.2.1.min.js"></script>
+    </head>
+    <body style="padding: 20px">
+       
+        <div id="app"> 
+        <card>
+            <Row>
+                <i-col span="5">
+                     <!-- 标题 -->
+                        <i-input v-model="title" placeholder="请输入主标题" maxlength=15 class="title" />
+                </i-col>
+                <i-col span="5" offset="2">
+                    <!-- 副标题 -->
+                        <i-input v-model="sub_title" placeholder="请输入副标题" maxlength=15 class="title"/>
+                </i-col>
+                <i-col span="12"></i-col>
+            </Row>
+            <div>
+                <!-- 跳转地址 -->
+                <i-input v-model="tagert_url" placeholder="请输入跳转地址" class="urlInput"/>
+            </div>
+            <Row>
+                <i-col span="5">
+                    <i-select v-model="reprint_type" placeholder="请选择文章创作类型" style="width:200px">
+                        <i-option v-for="item in statusList"  :value="item.value" :key="item.value">{{ item.label }}</i-option>
+                    </i-select>
+                </i-col>
+                <i-col span="5" offset="1">
+                        <i-select v-model="category" placeholder="请选择文章分类" style="width:200px">
+                                <i-option v-for="item in typeList"  :value="item.value" :key="item.value">{{ item.label }}</i-option>
+                        </i-select>
+                </i-col>
+                <i-col span="13"></i-col>
+            </Row>
+            <Upload
+                multiple
+                type="drag"
+                multiple="false"
+                :on-success="uploadSuccess"
+                :format="['jpg','jpeg','png']"
+                :max-size="2048"
+                action="http://188.131.225.138:8082/news/uploadImage">
+                <div v-if="!isShowUpload">
+                     <img :src="img_url" width="100%" height="100%">
+                </div>
+                <div style="padding: 20px 0" v-if="isShowUpload">
+                    <Icon type="ios-cloud-upload" size="52" style="color: #3399ff"></Icon>
+                    <p>点击上传封面图</p>
+                </div>
+            </Upload>
+           
+            <!-- 富文本编辑 -->
+            <div ref="editor">
+            </div>
+           <!-- 保存按钮 -->
+            <i-button type="primary" @click="saveContent">保存</i-button>
+            <i-button type="default" style="margin-left: 13px;
+            width: 200px;
+            margin-top: 20px;" @click="back">返回</i-button>
+            </card>
+        </div>
+    </body>
+        <script>
+            //Vue
+            new Vue({
+                el: '#app',
+                name: 'editor',
+                data: {
+                    title:'',//主标题
+                    sub_title:'',//副标题
+                    editor:null,
+                    editorContent: '',//富文本内容
+                    img_url:'',//封面图片地址
+                    id:null,//编辑富文本ID
+                    category:"1",//分类类型
+                    reprint_type:"1",//是否转载
+                    isShowUpload:1,//是否显示封面图上传
+                    tagert_url:'',//转载地址
+                    statusList:[
+                        {
+                            value:"1",
+                            label:"转载"
+                        },
+                        {
+                            value:"0",
+                            label:"原创"
+                        }
+                    ],
+                    typeList:[
+                        {
+                            value:"1",
+                            label:"分类一"
+                        },
+                        {
+                            value:"2",
+                            label:"分类二"
+                        },
+                        {
+                            value:"3",
+                            label:"分类三"
+                        },
+                        {
+                            value:"4",
+                            label:"分类四"
+                        },
+                        {
+                            value:"5",
+                            label:"分类五"
+                        }
+                    ]
+
+                },
+                 methods: {
+                     //保存富文本
+                    saveContent: function () {
+                        if (this.title.length < 1) {
+                            this.$Message.error('标题不能为空');
+                            return;
+                        }
+                        if (this.sub_title.length < 1) {
+                            this.$Message.error('副标题不能为空');
+                            return;
+                        }
+                        if (this.reprint_type == '' || this.reprint_type == null) {
+                            this.$Message.error('请选择文章创作类型');
+                            return;
+                        }
+                        if (this.category == '' || this.category == null) {
+                            this.$Message.error('请选择文章类别');
+                            return;
+                        }
+                        if (this.reprint_type == "1") {
+                            if(this.tagert_url.length < 1){
+                                this.$Message.error('请输入转载地址');
+                                return;
+                            }
+                        }else{
+                            if(this.editorContent.length < 1){
+                                this.$Message.error('请输入文章内容');
+                                return;
+                            }
+                        }
+                        if (this.img_url.length < 1) {
+                            this.$Message.error('请选择封面图上传');
+                            return;
+                        }
+                        let pram = {
+                            "content": this.editorContent,
+                            "img_url": this.img_url,
+                            "id":this.id,
+                            "is_show": 1,
+                            "sub_title": this.sub_title,
+                            "title": this.title,
+                            "tagert_url":this.tagert_url,
+                            "reprint_type":this.reprint_type,
+                            "category":this.category,
+                        }
+                        console.log(this.editorContent);
+                        let _this = this;
+                        $.ajax({
+                            type:"post",
+                            url:"http://188.131.225.138:8082/news/save",
+                            data:JSON.stringify(pram),
+                            dataType:"json",
+                            contentType: 'application/json; charset=UTF-8',
+                            success:function(data){
+                                _this.$Message.success('上传成功');
+                               
+                            },
+                            error:function(msg){
+                                _this.$Message.error(msg);
+                            }
+                        })
+                    },
+                    //获取老数据
+                    getOldData(){
+                        let _this = this;
+                        $.ajax({
+                            type:"get",
+                            url:"http://188.131.225.138:8082/news/getById?id="+_this.id,
+                            data:{},
+                            dataType:"json",
+                            success:function(data){
+                            //    if (data.code == "1") {
+                                _this.title = data.Data.title;
+                                _this.sub_title =  data.Data.sub_title;
+                                _this.editorContent =  data.Data.content;
+                                _this.img_url =  data.Data.img_url;
+                                _this.is_show =  data.Data.is_show;
+                                _this.isShowUpload = 0;
+                                _this.reprint_type =  data.Data.reprint_type+'';
+                                _this.tagert_url =  data.Data.tagert_url;
+                                _this.category =  data.Data.category+'';
+                                _this.editor.txt.html(data.Data.content);
+                              
+                            //    }
+                            },
+                            error:function(msg){
+                                _this.$Message.error(msg);
+                            }
+                        })
+                    },
+                    //图片上传成功
+                    uploadSuccess(response){
+                        console.log(response);
+                        this.$Message.success('上传成功');
+                        this.isShowUpload = 0;
+                        this.img_url = response.Data;
+                    },
+                     GetQueryString(name)
+                    {
+                        var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+                        var r = window.location.search.substr(1).match(reg);
+                        console.log("啊啊啊啊地址"+r);
+                        if(r!=null)return  unescape(r[2]); return null;
+                    },
+                    back(){
+                        history.back(-1);
+                    }
+                },
+                mounted() {
+                    //富文本编辑的相关配置
+                    var E = window.wangEditor;
+                    this.editor = new E(this.$refs.editor);
+                    // 使用 base64 保存图片
+                    // this.editor.customConfig.uploadImgShowBase64 = true; 
+                    //文本变化回调
+                    this.editor.customConfig.onchange = (html) => {
+                         this.editorContent = html
+                    }
+                    this.editor.create()
+                },
+                created: function () {
+                  this.id = this.GetQueryString('id')
+                     console.log(this.id);
+                    if (this.id != null) {
+                        this.getOldData();
+                    }
+                }
+            })
+
+        </script>
+   
+
+    <style type="text/css">
+        .title{
+            width: 300px;
+            margin-bottom: 20px;
+            height: 30px;
+        }
+        .urlInput{
+            width: 400px;
+            margin-bottom: 20px;
+            height: 30px;
+        }
+        textarea.ivu-input{
+            height: 500px;
+        }
+        .ivu-btn-primary {
+            margin-left: 13px;
+            width: 200px;
+            margin-top: 20px;
+        }
+        .ivu-upload{
+            width: 180px;
+            margin-top: 15px;
+        }
+       
+
+    </style>
+</html>

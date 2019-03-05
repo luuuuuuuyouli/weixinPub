@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+
+	<title>列表</title>
+</head>
+<body style="background-color: rgba(245,245,245,1);">
+	<div id="content">
+		
+	</div>
+
+</body>
+<script src="./js/jquery-3.2.1.min.js"></script>
+<script src="./js/layer/layer.js"></script>
+<script type="text/javascript">
+
+	function GetQueryString(name)
+        {
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(r[2]); return null;
+        }
+
+	var category =  GetQueryString('category');
+
+	console.log('category='+category);
+
+	 $(function () {
+	 	 $.ajax({
+ 			type:"get",
+            url:"http://188.131.225.138:8082/news/getNewsPage",
+            data:{"category":category},
+            dataType:"json",
+            success:function(data){
+                 console.log(data.Data)
+                 if (data.Code == 1) {
+                 	 for (var i = 0; i < data.Data.list.length; i++) {
+				 		let html = '<div class="back" onclick="detail('+data.Data.list[i].id+','+data.Data.list[i].reprint_type+',\''+data.Data.list[i].tagert_url+'\')">'+
+							'<flexItem class="img_item">'+
+								'<img src='+data.Data.list[i].img_url+' width="90px" height="80px">'+
+							'</flexItem>'+
+							'<flexItem class="content_item">'+
+								'<div class="title">'+data.Data.list[i].title+'</div>'+
+								'<div class="content_l">'+data.Data.list[i].sub_title+'</div>'+
+								'<div class="time">'+data.Data.list[i].add_time+'</div>'+
+							'</flexItem>'+
+
+						'</div>'
+						$("#content").append(html);
+				 	} 
+                 }
+          
+             },
+             error:function(msg){
+                    layer.msg(msg);
+                }
+             })
+
+	
+	 })
+
+	 function detail(id,type,url) {
+		 if (type == 1) {
+			window.location.href = url;
+		 }else{
+			window.location.href = "./detail.html?id=" + id;
+		 }
+	 	
+	 }
+
+</script>
+<style type="text/css">
+body{
+
+            padding: 0;
+            margin: 0;
+        }
+	.back{
+		display: -webkit-flex;
+		justify-content:flex-start;
+		margin-top: 1px;
+		background-color: white;
+		height: 115px;
+	}
+	.img_item{
+		padding-top: 12px;
+		padding-left: 12px;
+	}
+	.content_item{
+		padding-left: 12px;
+		padding-top: 12px;
+		width: 70%;
+	}
+	.title{
+		color: #333;
+		font-size: 15px;	
+	}
+	.content_l{
+		color: #666666;
+		font-size: 14px;
+		height: 40px;
+	}
+	.time{
+		color: #666666;
+		font-size: 12px;
+		float: right;
+		margin-top: 0px;
+		margin-right: 15px;
+		/*position: absolute;
+		right: 15px;
+		top: 80px;*/
+	}
+	
+</style>
+</html>

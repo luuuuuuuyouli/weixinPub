@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+        <script src="./js/jquery-3.2.1.min.js"></script>
+        <script src="./js/layer/layer.js"></script>
+        <script src="./js/path.js"></script>
+	<title>文章详情</title>
+</head>
+<style type="text/css">
+	 /*body{
+
+            padding: 0;
+            margin: 0;
+        }*/
+</style>
+<body style="background-color: rgba(245,245,245,1);">
+
+	<div id="content">
+		
+	</div>
+
+</body>
+<script type="text/javascript">
+	    
+	     function GetQueryString(name)
+        {
+            var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if(r!=null)return  unescape(r[2]); return null;
+        }
+        var ID = GetQueryString('id');
+        $(function () {
+        	  $.ajax({
+                        type:"get",
+                        url:"http://188.131.225.138:8082/news/getById?id="+ID,
+                        data:{},
+                        dataType:"json",
+                        success:function(data){
+                            console.log(data)
+                            if(data.Code=="1"){
+
+                               $("#content").html(data.Data.content);
+  		
+                            }else{
+   
+                            }
+                        },
+                        error:function(msg){
+                            layer.msg(msg);
+                        }
+                    })
+
+
+       	 })	
+        
+
+</script>
+</html>
